@@ -1,0 +1,64 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context" 
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-4.0.xsd 
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/util 
+		http://www.springframework.org/schema/util/spring-util-4.0.xsd">
+	
+	<!-- Http连接管理器 -->
+	<bean id="httpClientConnectionManager" class="org.apache.http.impl.conn.PoolingHttpClientConnectionManager" 
+		destroy-method="close">
+		<!-- 连接池连接最大数 -->
+		<property name="maxTotal" value="${http.pool.maxTotal}" />
+		<!-- 每个主机的并发数 -->
+		<property name="defaultMaxPerRoute" value="${http.pool.defaultMaxPerRoute}" />
+	</bean>
+	
+	<!-- HttpClient工厂构建器 -->
+	<bean id="httpClientBuilder" class="org.apache.http.impl.client.HttpClientBuilder" factory-method="create">
+		<!-- 注入Http连接管理器 -->
+		<property name="connectionManager" ref="httpClientConnectionManager" />
+	</bean>
+	
+	<!-- HttpClient实例, 多例 -->
+	<!-- <bean id="httpClient" factory-bean="httpClientBuilder" factory-method="build"/> -->
+	<bean class="org.apache.http.impl.client.CloseableHttpClient" 
+		factory-bean="httpClientBuilder" factory-method="build" scope="prototype" />
+	
+	
+	<!-- 请求参数构建器 -->
+	<bean id="requestConfigBuilder" class="org.apache.http.client.config.RequestConfig.Builder">
+		<!-- 创建连接的超时时间: 毫秒 -->
+		<property name="connectTimeout" value="${http.request.connectTimeout}"/>
+		<!-- 从连接池中获取连接的超时时间: 毫秒 -->
+		<property name="connectionRequestTimeout" value="${http.request.connectionRequestTimeout}"/>
+		<!-- 数据传输超时时间: 毫秒 -->
+		<property name="socketTimeout" value="${http.request.socketTimeout}"/>
+		<!-- 提交请求前测试连接是否可用 -->
+		<property name="staleConnectionCheckEnabled" value="${http.request.staleConnectionCheckEnabled}"/>
+	</bean>	
+	
+	<!-- requestConfig实例 -->
+	<!-- <bean id="requestConfig" factory-bean="requestConfigBuilder" factory-method="build" /> -->
+	<bean class="org.apache.http.client.config.RequestConfig" 
+		factory-bean="requestConfigBuilder" factory-method="build" />
+	
+	
+	<!-- 定期关闭无效连接 -->
+	<bean class="com.compass.httpclient.IdleConnectionEvictor" destroy-method="shutdown">
+		<!-- 构造函数注入Http连接管理器 -->
+		<constructor-arg index="0" ref="httpClientConnectionManager" />
+		<!-- 清理间隔时间: 毫秒 -->
+		<constructor-arg index="1" value="60000" />
+	</bean>
+</beans>
