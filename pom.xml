@@ -14,6 +14,7 @@
 	<servlet-api.version>2.5</servlet-api.version>
 	<commons-lang3.version>3.3.2</commons-lang3.version>
 	<solrj.version>4.10.3</solrj.version>
+	<spring-rabbit.version>1.6.0.RELEASE</spring-rabbit.version>
   </properties>
   
   <dependencies>
@@ -67,6 +68,12 @@
 		<artifactId>commons-lang3</artifactId>
 		<version>${commons-lang3.version}</version>
 	  </dependency>
+	  <!-- 整合项目时，只需导入spring实现的rabbit -->
+	  <dependency>
+        <groupId>org.springframework.amqp</groupId>
+        <artifactId>spring-rabbit</artifactId>
+        <version>${spring-rabbit.version}</version>
+      </dependency>
   </dependencies>
   
   <build>
