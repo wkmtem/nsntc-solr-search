@@ -1,0 +1,33 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xsi:schemaLocation="http://www.springframework.org/schema/rabbit
+						http://www.springframework.org/schema/rabbit/spring-rabbit-1.6.xsd
+						http://www.springframework.org/schema/beans
+						http://www.springframework.org/schema/beans/spring-beans-4.2.xsd">
+	
+	<!-- RabbitMQ的连接工厂 -->
+	<rabbit:connection-factory id="connectionFactory" host="192.168.0.201" port="5672" 
+		username="admin" password="admin" virtual-host="/admin" />
+		
+	<!-- MQ的管理 -->
+	<rabbit:admin connection-factory="connectionFactory" />
+	
+	<!-- 队列，admin自动声明(durable:true持久化[default], false非持久化) -->
+	<rabbit:queue name="solr-search-item-queue" auto-declare="true" durable="true"/>
+	
+	<!-- 消费者 -->
+	<bean id="itemMQHandler" class="com.compass.mq.handler.ItemMQHandler" />
+	
+	<!-- 队列监听 -->
+	<rabbit:listener-container connection-factory="connectionFactory">
+		<rabbit:listener ref="itemMQHandler" method="execute" queue-names="solr-search-item-queue" />
+	</rabbit:listener-container>
+	
+	<!-- 管理界面交换机与队列绑定 -->
+	<!-- Exchanges -> Name -> xxx-xxx-exchange -> add binding from this exchange 
+	     -> To queue: solr-search-item-queue 
+	     -> Routing key: item.# 
+	     -> Bind
+	-->
+</beans>
